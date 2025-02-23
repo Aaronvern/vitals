@@ -1,24 +1,23 @@
 from fastapi import FastAPI, UploadFile, File, Depends
-from auth import get_current_user, login, register
+from auth import get_current_user, login, register, LoginRequest, RegisterRequest
 from video_analysis import analyze_video
 from wolfram_analysis import wolfram_analyze
 from aptos_rewards import mint_tokens
 
-
 app = FastAPI()
 
-
+# Endpoints
 @app.get("/")
 async def root():
     return {"message": "FormFit Backend"}
 
 @app.post("/token")
-async def token(username: str, password: str):
-    return login(username, password)
+async def token(request: LoginRequest):
+    return login(request)
 
 @app.post("/register")
-async def register_user(username: str, password: str, wallet_address: str):
-    return register(username, password, wallet_address)
+async def register_user(request: RegisterRequest):
+    return register(request)
 
 @app.post("/analyze_video")
 async def video_analysis(file: UploadFile = File(...), user: dict = Depends(get_current_user)):

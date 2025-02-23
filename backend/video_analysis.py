@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime
 from config import WORKOUTS_COLLECTION_ID
 from database import create_document
+from fastapi import UploadFile
 
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
@@ -21,9 +22,9 @@ def analyze_frame(frame):
     if not results.pose_landmarks:
         return {"reps": 0, "form": "No pose detected"}
     landmarks = results.pose_landmarks.landmark
-    knee_angle = calculate_angle(landmarks[23], landmarks[25], landmarks[27])  # Hip-Knee-Ankle
+    knee_angle = calculate_angle(landmarks[23], landmarks[25], landmarks[27])  # Hip Knee(gutna) Ankle (anklva XD)
     form_feedback = "Good" if 90 < knee_angle < 110 else "Adjust knees"
-    reps = 1 if knee_angle < 100 else 0  # Simplified rep counting
+    reps = 1 if knee_angle < 100 else 0  # rep counting
     return {"reps": reps, "form": form_feedback}
 
 async def analyze_video(file: UploadFile, user: dict):
