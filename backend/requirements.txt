@@ -1,0 +1,14 @@
+fastapi==0.95.1
+uvicorn==0.21.1
+opencv-python==4.7.0.72
+mediapipe==0.10.21
+numpy==1.26.4
+requests==2.28.2
+aptos-sdk==0.10.0
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+wolframclient==1.4.0
+appwrite==2.0.2
+pydantic==1.10.21
+starlette==0.26.1
+cryptography==44.0.1
