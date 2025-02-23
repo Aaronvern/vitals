@@ -2,6 +2,8 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from datetime import datetime
+import tempfile
+import os
 from config import WORKOUTS_COLLECTION_ID
 from database import create_document
 from fastapi import UploadFile
@@ -22,15 +24,28 @@ def analyze_frame(frame):
     if not results.pose_landmarks:
         return {"reps": 0, "form": "No pose detected"}
     landmarks = results.pose_landmarks.landmark
-    knee_angle = calculate_angle(landmarks[23], landmarks[25], landmarks[27])  # Hip Knee(gutna) Ankle (anklva XD)
+    knee_angle = calculate_angle(landmarks[23], landmarks[25], landmarks[27])  # Hip-Knee-Ankle
     form_feedback = "Good" if 90 < knee_angle < 110 else "Adjust knees"
-    reps = 1 if knee_angle < 100 else 0  # rep counting
+    reps = 1 if knee_angle < 100 else 0 
     return {"reps": reps, "form": form_feedback}
 
 async def analyze_video(file: UploadFile, user: dict):
+    
     video_data = await file.read()
-    cap = cv2.VideoCapture()
-    cap.open(cv2.imdecode(np.frombuffer(video_data, np.uint8), cv2.IMREAD_COLOR))
+    if not video_data:
+        raise ValueError("No video data provided")
+
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
+        temp_file.write(video_data)
+        temp_file_path = temp_file.name
+
+    
+    cap = cv2.VideoCapture(temp_file_path)
+    if not cap.isOpened():
+        os.remove(temp_file_path)  
+        raise ValueError("Failed to open video file")
+
     total_reps = 0
     form_feedback = ""
     while cap.isOpened():
@@ -41,13 +56,24 @@ async def analyze_video(file: UploadFile, user: dict):
         total_reps += result["reps"]
         form_feedback = result["form"]
     cap.release()
+
+   
+    os.remove(temp_file_path)
+
+    
+    total_reps = max(1, min(total_reps, 10000)) 
+    form_score = 1 if "Good" in form_feedback else 0 
+    form_score = max(1, min(form_score, 10000))  
+
+    print(f" voohooo aaron herw Total reps: {total_reps}, Form feedback: {form_feedback}, Form score: {form_score}")
+
     workout = create_document(
         WORKOUTS_COLLECTION_ID,
         {
             "user_id": user["$id"],
             "date": datetime.now().isoformat(),
             "reps": total_reps,
-            "form_score": 1.0 if "Good" in form_feedback else 0.5,
+            "form_score": form_score, 
             "calories": total_reps * 10
         }
     )

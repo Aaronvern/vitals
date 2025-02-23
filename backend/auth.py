@@ -4,8 +4,9 @@ from jose import jwt, JWTError
 from pydantic import BaseModel
 from config import SECRET_KEY, USERS_COLLECTION_ID
 from database import get_document, list_documents, create_document
+from appwrite.query import Query  # Import Query class
 
-
+# Pydantic models for request validation
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -31,7 +32,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 def login(request: LoginRequest):
-    users = list_documents(USERS_COLLECTION_ID, filters=[f"username={request.username}"])["documents"]
+    users = list_documents(USERS_COLLECTION_ID, queries=[Query.equal("username", request.username)])["documents"]
     if not users or users[0]["password"] != request.password:
         raise HTTPException(status_code=400, detail="Invalid credentials")
     user = users[0]
@@ -39,7 +40,7 @@ def login(request: LoginRequest):
     return {"access_token": token, "token_type": "bearer"}
 
 def register(request: RegisterRequest):
-    users = list_documents(USERS_COLLECTION_ID, filters=[f"username={request.username}"])["documents"]
+    users = list_documents(USERS_COLLECTION_ID, queries=[Query.equal("username", request.username)])["documents"]
     if users:
         raise HTTPException(status_code=400, detail="Username exists")
     user = create_document(
