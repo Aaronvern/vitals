@@ -1,0 +1,16 @@
+[package]
+name = "FormFitRewards"
+version = "1.0.0"
+authors = []
+
+[addresses]
+FormFitRewards="0xc6d7d24e87d4a0ae487da660be27c549d6024fe977dfdbfbbcc1f3f99444c903"
+
+[dev-addresses]
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "testnet"
+subdir = "aptos-framework"
+
+[dev-dependencies]
